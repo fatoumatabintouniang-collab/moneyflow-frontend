@@ -1,0 +1,22 @@
+<h2>Transactions</h2>
+
+<ul>
+  <li *ngFor="let t of transactions">
+    ID: {{t.id}} - Type: {{t.type}} - Montant: {{t.amount}} - Statut: {{t.status}}
+  </li>
+</ul>
+
+<hr>
+
+<h3>Dépôt</h3>
+<input type="number" [(ngModel)]="depositAmount" placeholder="Montant">
+<button (click)="deposit()">Déposer</button>
+
+<h3>Retrait</h3>
+<input type="number" [(ngModel)]="withdrawAmount" placeholder="Montant">
+<button (click)="withdraw()">Retirer</button>
+
+<h3>Transfert</h3>
+<input type="number" [(ngModel)]="receiverId" placeholder="Receiver ID">
+<input type="number" [(ngModel)]="transferAmount" placeholder="Montant">
+<button (click)="transfer()">Transférer</button>

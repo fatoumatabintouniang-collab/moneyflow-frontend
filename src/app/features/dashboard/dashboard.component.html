@@ -1,0 +1,350 @@
+<div class="container">
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">
+      <i class="fas fa-money-bill-wave"></i> MoneyFlow
+    </div>
+
+    <nav>
+      <ul class="nav-menu">
+        <li>
+          <a href="#" (click)="showSection('dashboard'); $event.preventDefault()" 
+             [class.active]="activeSection==='dashboard'">
+            <i class="fas fa-home"></i> Accueil
+          </a>
+        </li>
+        <li>
+          <a href="#" (click)="showSection('history'); $event.preventDefault()" 
+             [class.active]="activeSection==='history'">
+            <i class="fas fa-history"></i> Historique
+          </a>
+        </li>
+        <li>
+          <a href="#" (click)="showSection('profile'); $event.preventDefault()" 
+             [class.active]="activeSection==='profile'">
+            <i class="fas fa-user"></i> Profil
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="user-info">
+      <div class="alerts">
+        <i class="fas fa-bell"></i>
+        <span class="badge">{{ filteredTransactions.length }}</span>
+      </div>
+      <button class="btn btn-secondary" (click)="logout()">
+        <i class="fas fa-sign-out-alt"></i> Déconnexion
+      </button>
+    </div>
+  </header>
+
+  <!-- Dashboard -->
+  <section *ngIf="activeSection==='dashboard'" class="card">
+    <h2 style="margin-bottom: 1.5rem;">Bonjour {{ username }} !</h2>
+    
+    <!-- Balance and Stats -->
+    <div class="dashboard-grid">
+      <div class="stat-card balance-card">
+        <div class="balance-header">
+          <h3>Mon Solde</h3>
+          <button class="eye-btn" (click)="toggleBalance()">
+            <i class="fas" [ngClass]="showBalance ? 'fa-eye-slash' : 'fa-eye'"></i>
+          </button>
+        </div>
+        <div class="balance-value">
+          <span *ngIf="showBalance">{{ accountBalance | number:'1.2-2' }} F CFA</span>
+          <span *ngIf="!showBalance">**** F CFA</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div class="transaction-icon sent">
+            <i class="fas fa-arrow-up"></i>
+          </div>
+          <div>
+            <div style="font-size: 0.9rem; color: var(--gray);">Envoyé ce mois</div>
+            <div style="font-size: 1.2rem; font-weight: 700; color: var(--danger);">
+              {{ getSentThisMonth() | number:'1.2-2' }} F CFA
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div class="transaction-icon received">
+            <i class="fas fa-arrow-down"></i>
+          </div>
+          <div>
+            <div style="font-size: 0.9rem; color: var(--gray);">Reçu ce mois</div>
+            <div style="font-size: 1.2rem; font-weight: 700; color: var(--success);">
+              {{ getReceivedThisMonth() | number:'1.2-2' }} F CFA
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div style="margin-bottom: 2rem;">
+      <h3 style="margin-bottom: 1rem;">Actions Rapides</h3>
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <button class="btn btn-primary" (click)="transfer()">
+          <i class="fas fa-paper-plane"></i> Nouveau Transfert
+        </button>
+        <button class="btn btn-secondary" (click)="deposit()">
+          <i class="fas fa-plus"></i> Dépôt
+        </button>
+        <button class="btn btn-secondary" (click)="withdraw()">
+          <i class="fas fa-minus"></i> Retrait
+        </button>
+      </div>
+    </div>
+     <h2 style="margin-bottom: 1.5rem;">Historique des Transactions</h2>
+    
+
+  
+  <!-- Filters -->
+  <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+    <select class="form-control" style="width: auto;" [(ngModel)]="selectedTypeFilter" (change)="applyFilters()">
+      <option value="">Toutes les transactions</option>
+      <option value="TRANSFER">Transferts</option>
+      <option value="DEPOSIT">Dépôts</option>
+      <option value="WITHDRAW">Retraits</option>
+    </select>
+    
+    <select class="form-control" style="width: auto;" [(ngModel)]="selectedDateFilter" (change)="applyFilters()">
+      <option value="">Toutes les dates</option>
+      <option value="thisMonth">Ce mois</option>
+      <option value="lastMonth">Le mois dernier</option>
+    </select>
+  </div>
+  
+  <!-- Transaction List -->
+  <div class="transaction-list">
+    <div class="transaction-header">
+      Toutes vos transactions ({{ filteredTransactions.length }})
+    </div>
+    
+    <div *ngIf="filteredTransactions.length === 0 && transactions.length > 0" style="text-align: center; padding: 2rem; color: var(--gray);">
+      <i class="fas fa-filter"></i><br>
+      Aucune transaction trouvée pour les filtres sélectionnés
+    </div>
+    
+    <div *ngIf="filteredTransactions.length === 0 && transactions.length === 0" style="text-align: center; padding: 2rem; color: var(--gray);">
+      <i class="fas fa-inbox"></i><br>
+      Aucune transaction dans votre historique
+    </div>
+    
+    <!-- ✅ Structure corrigée pour l'alignement horizontal avec date ajoutée -->
+    <div *ngFor="let transaction of filteredTransactions" class="transaction-item-modern">
+      <!-- Partie gauche: Icône + Détails -->
+      <div class="transaction-left">
+        <div class="transaction-icon-modern" [ngClass]="{
+          'icon-transfer': transaction.type === 'TRANSFER',
+          'icon-deposit': transaction.type === 'DEPOSIT',
+          'icon-withdraw': transaction.type === 'WITHDRAW'
+        }">
+          <i class="fas" [ngClass]="{
+            'fa-paper-plane': transaction.type === 'TRANSFER',
+            'fa-plus': transaction.type === 'DEPOSIT',
+            'fa-minus': transaction.type === 'WITHDRAW'
+          }"></i>
+        </div>
+        
+        <div class="transaction-details-modern">
+          <h4 class="transaction-title">{{ getTransactionTitle(transaction) }}</h4>
+          <div class="transaction-meta">
+            <span class="transaction-date">{{ formatTransactionDate(transaction) }}</span>
+            <span class="transaction-status" [ngClass]="{
+              'status-completed': transaction.status === 'COMPLETED' || transaction.status === 'SUCCESS' || !transaction.status,
+              'status-pending': transaction.status === 'PENDING'
+            }">
+              {{ transaction.status === 'PENDING' ? 'EN ATTENTE' : 'COMPLÉTÉ' }}
+            </span>
+          </div>
+          <!-- Date complète en bas -->
+          <div class="transaction-full-date" style="font-size: 0.8rem; color: var(--gray); margin-top: 4px;">
+            <i class="fas fa-clock"></i> {{ formatTransactionDate(transaction) }}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Partie centre: Montant -->
+      <div class="transaction-amount-modern" [ngClass]="{
+        'amount-positive': isReceivedTransaction(transaction),
+        'amount-negative': !isReceivedTransaction(transaction)
+      }">
+        {{ isReceivedTransaction(transaction) ? '+' : '-' }}{{ transaction.amount | number:'1.2-2' }} F CFA
+      </div>
+      
+      <!-- Partie droite: Bouton PDF -->
+      <div class="transaction-actions-modern">
+        <button class="btn-download" (click)="downloadReceipt(transaction)">
+          <i class="fas fa-download"></i>
+          Télécharger reçu
+        </button>
+      </div>
+    </div>
+  </div>
+  </section>
+
+  <!-- Historique -->
+ <section *ngIf="activeSection==='history'" class="card">
+  <h2 style="margin-bottom: 1.5rem;">Historique des Transactions</h2>
+  
+  <!-- Filters -->
+  <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+    <select class="form-control" style="width: auto;" [(ngModel)]="selectedTypeFilter" (change)="applyFilters()">
+      <option value="">Toutes les transactions</option>
+      <option value="TRANSFER">Transferts</option>
+      <option value="DEPOSIT">Dépôts</option>
+      <option value="WITHDRAW">Retraits</option>
+    </select>
+    
+    <select class="form-control" style="width: auto;" [(ngModel)]="selectedDateFilter" (change)="applyFilters()">
+      <option value="">Toutes les dates</option>
+      <option value="thisMonth">Ce mois</option>
+      <option value="lastMonth">Le mois dernier</option>
+    </select>
+  </div>
+  
+  <!-- Transaction List -->
+  <div class="transaction-list">
+    <div class="transaction-header">
+      Toutes vos transactions ({{ filteredTransactions.length }})
+    </div>
+    
+    <div *ngIf="filteredTransactions.length === 0 && transactions.length > 0" style="text-align: center; padding: 2rem; color: var(--gray);">
+      <i class="fas fa-filter"></i><br>
+      Aucune transaction trouvée pour les filtres sélectionnés
+    </div>
+    
+    <div *ngIf="filteredTransactions.length === 0 && transactions.length === 0" style="text-align: center; padding: 2rem; color: var(--gray);">
+      <i class="fas fa-inbox"></i><br>
+      Aucune transaction dans votre historique
+    </div>
+    
+    <!-- ✅ Structure corrigée pour l'alignement horizontal avec date ajoutée -->
+    <div *ngFor="let transaction of filteredTransactions" class="transaction-item-modern">
+      <!-- Partie gauche: Icône + Détails -->
+      <div class="transaction-left">
+        <div class="transaction-icon-modern" [ngClass]="{
+          'icon-transfer': transaction.type === 'TRANSFER',
+          'icon-deposit': transaction.type === 'DEPOSIT',
+          'icon-withdraw': transaction.type === 'WITHDRAW'
+        }">
+          <i class="fas" [ngClass]="{
+            'fa-paper-plane': transaction.type === 'TRANSFER',
+            'fa-plus': transaction.type === 'DEPOSIT',
+            'fa-minus': transaction.type === 'WITHDRAW'
+          }"></i>
+        </div>
+        
+        <div class="transaction-details-modern">
+          <h4 class="transaction-title">{{ getTransactionTitle(transaction) }}</h4>
+          <div class="transaction-meta">
+            <span class="transaction-date">{{ (transaction.transactionDate || transaction.createdAt) | date:'dd/MM/yyyy' }}</span>
+            <span class="transaction-status" [ngClass]="{
+              'status-completed': transaction.status === 'COMPLETED' || transaction.status === 'SUCCESS' || !transaction.status,
+              'status-pending': transaction.status === 'PENDING'
+            }">
+              {{ transaction.status === 'PENDING' ? 'EN ATTENTE' : 'COMPLÉTÉ' }}
+            </span>
+          </div>
+          <!-- Date et heure complètes en bas -->
+          <div class="transaction-full-date" style="font-size: 0.8rem; color: var(--gray); margin-top: 4px;">
+            <i class="fas fa-clock"></i> {{ formatTransactionDate(transaction) }}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Partie centre: Montant -->
+      <div class="transaction-amount-modern" [ngClass]="{
+        'amount-positive': isReceivedTransaction(transaction),
+        'amount-negative': !isReceivedTransaction(transaction)
+      }">
+        {{ isReceivedTransaction(transaction) ? '+' : '-' }}{{ transaction.amount | number:'1.2-2' }} F CFA
+      </div>
+      
+      <!-- Partie droite: Bouton PDF -->
+      <div class="transaction-actions-modern">
+        <button class="btn-download" (click)="downloadReceipt(transaction)">
+          <i class="fas fa-download"></i>
+          Télécharger reçu
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+ 
+  
+ <div id="profile" class="section" [class.active]="activeSection==='profile'">
+  <div class="card">
+    <h3><i class="fas fa-user"></i> Mon Profil</h3>
+
+    <div class="profile-info">
+      <div class="profile-header">
+        <div class="avatar">
+          <i class="fas fa-user-circle"></i>
+        </div>
+        <div class="profile-details">
+          <h2>{{ userProfile.name }} !</h2> 
+          <p>Membre depuis 2025</p>
+        </div>
+      </div>
+
+      <div class="profile-data">
+        <div class="data-row">
+          <label>Email:</label>
+          <span>{{userProfile.email}}</span>
+        </div>
+        <div class="data-row">
+          <label>Téléphone:</label>
+          <span>{{userProfile.phone}}</span>
+        </div>
+        <div class="data-row">
+          <label>Adresse:</label>
+          <span>{{userProfile.address}}</span>
+        </div>
+        <div class="data-row">
+          <label>Numéro de compte:</label>
+          <span>{{userProfile.accountNumber}}</span>
+        </div>
+        <div class="data-row">
+          <label>Solde actuel:</label>
+          <span class="balance">{{ userProfile.balance | number:'1.2-2' }} F CFA</span> <!-- ✅ Utilise userProfile.balance -->
+        </div>
+      </div>
+
+      <div class="subscription" style="margin-top: 2rem;">
+        <h4>Mon Abonnement <span class="badge-tier">{{subscription.type}}</span></h4>
+        <p>
+          Type: <strong>{{subscription.type}}</strong><br>
+          Réduction des frais: <strong>{{subscription.discount}}%</strong><br>
+          Expiration: <strong>{{subscription.expiry}}</strong>
+        </p>
+        <button class="btn btn-primary" (click)="upgradeSubscription()">
+          <i class="fas fa-star"></i> Passer en Premium
+        </button>
+      </div>
+
+      <div class="profile-actions" style="margin-top: 2rem;">
+        <h4>Actions du compte</h4>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
+         
+          <button class="btn btn-secondary" (click)="exportData()">
+            <i class="fas fa-download"></i> Exporter les données
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+</div>

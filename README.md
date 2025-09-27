@@ -100,7 +100,7 @@ npm install rxjs
 Membre du groupe:
 Nom complet :
 1.Fatoumata Bintou Niang (email:fatoumatabintou.niang@unchk.edu.sn & INE: N04005020202)
-2.Bineta Sow(email:bineta.sow10@unchk.edu.sn & INE: )
+2.Bineta Sow(email:bineta.sow10@unchk.edu.sn & INE: N02948520202)
 
 
 Voici les liens vers les dépôts de notre projet MoneyFlow :
